@@ -1,0 +1,36 @@
+service: cloudfront-viewer-country
+
+provider:
+  name: aws
+  runtime: python3.8
+
+functions:
+  viewer-country:
+    handler: lambda_function.lambda_handler
+    events:
+      - cloudfront:
+          event: viewer-request
+
+resources:
+  apiGateway:
+    RestApi:
+      name: cloudfront-viewer-country
+      resources:
+        - Path: /
+          Method: GET
+          Integration:
+            Type: Lambda
+            Function: viewer-country
+
+  cloudFront:
+    Distribution:
+      DistributionConfig:
+        Origins:
+          - Id: s3-origin
+            DomainName: s3.amazonaws.com
+            OriginPath: /
+        CacheBehaviors:
+          - AllowedMethods:
+              - GET
+            ViewerCountryHeader: CloudFront-Viewer-Country
+            PathPattern: /
